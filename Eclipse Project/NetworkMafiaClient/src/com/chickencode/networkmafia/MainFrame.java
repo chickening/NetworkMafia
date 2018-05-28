@@ -24,8 +24,9 @@ public class MainFrame extends JFrame
 	private MainFrame()
 	{
 		this.setResizable(false);
-		this.setBounds(0,0,540,960);
-		this.setLayout(null);
+		this.setSize(540, 989);
+		this.getContentPane().setBounds(0,0,540,960);
+		this.getContentPane().setLayout(null);
 		this.setVisible(true);
 		visiableView = LoginView.getInstance();
 		this.add(visiableView);

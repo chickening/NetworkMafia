@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.awt.event.KeyListener;
 
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -28,6 +29,7 @@ public class LoginView extends JPanel
 	{ 
 		this.setBounds(0,0, 540, 960);
 		this.setLayout(null);
+		this.setBackground(colorBackground);
 		this.setVisible(true);
 		inputId = new JTextField();
 		inputId.setBounds(150, 600, 340, 70);
@@ -77,6 +79,11 @@ public class LoginView extends JPanel
 		btnLogin.setFont(new Font("¸¼Àº °íµñ" , Font.PLAIN , 30));
 		btnLogin.setText("·Î±×ÀÎ");
 		btnLogin.setBackground(new Color(0xaa,0xff,0xaa));
+		btnLogin.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				MainFrame.getInstance().changeView(LobbyView.getInstance());
+			}
+		});
 		this.add(btnLogin);
 		
 		btnSignUp = new JButton();
@@ -104,8 +111,7 @@ public class LoginView extends JPanel
 	}
 	public void paint(Graphics g)
 	{
-		g.setColor(colorBackground);
-		g.fillRect(0, 0, this.getWidth(), this.getHeight());
+		super.paint(g);
 		g.drawImage(DataBase.getDataBase().getImage("img_logo"), 50 , 20 ,400,150, this);
 		g.drawImage(DataBase.getDataBase().getImage("img_mafia") ,0 , 200 , 540 , 300,this);
 		
@@ -115,8 +121,6 @@ public class LoginView extends JPanel
 		
 		g.drawImage(DataBase.getDataBase().getImage("img_lock"),75,610,50,50, this);
 		g.drawImage(DataBase.getDataBase().getImage("img_key") ,75,710,50,50,this);
-		
-		this.paintComponents(g);
 	}
 
 }
