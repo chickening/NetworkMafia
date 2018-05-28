@@ -3,6 +3,8 @@ package com.chickencode.networkmafia;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 
@@ -16,12 +18,12 @@ public class LoginView extends JPanel
 {
 	static private boolean haveInstance = false;
 	static private LoginView instance;
-	JButton btnLogin;
-	JButton btnSignUp;
-	JTextField inputId;
-	JPasswordField inputPassword;
+	private JButton btnLogin;
+	private JButton btnSignUp;
+	private JTextField inputId;
+	private JPasswordField inputPassword;
+	private Color colorBackground = new Color(0X11 ,0X11, 0X11);
 	
-	Color colorBackground = new Color(0X11 ,0X11, 0X11);
 	private LoginView()
 	{ 
 		this.setBounds(0,0, 540, 960);
@@ -83,6 +85,12 @@ public class LoginView extends JPanel
 		btnSignUp.setFont(new Font("¸¼Àº °íµñ" , Font.PLAIN , 30));
 		btnSignUp.setText("È¸¿ø°¡ÀÔ");
 		btnSignUp.setBackground(new Color(0xff,0xff,0xaa));
+		btnSignUp.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e)
+			{
+				MainFrame.getInstance().changeView(SignUpView.getInstance());
+			}
+		});
 		this.add(btnSignUp);
 	}
 	static public LoginView getInstance()	//SingleTon
