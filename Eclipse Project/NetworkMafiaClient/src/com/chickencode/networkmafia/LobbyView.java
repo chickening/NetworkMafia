@@ -71,20 +71,19 @@ public class LobbyView extends JPanel
 		});
 		this.add(btnNext);
 		
-		btnEntirely = new JButton();
-		btnEntirely.setBackground(new Color(0xFF,0xCC,0x44));
-		btnEntirely.setBounds(0, 100, 270, 100);
-		btnEntirely.setBorder(new EmptyBorder(0,0,0,0));
-		btnEntirely.setFont(new Font("¸¼Àº °íµñ" , Font.PLAIN , 40));
-		btnEntirely.setText("ÀüÀû");
-		this.add(btnEntirely);
-		
 		btnMakeRoom = new JButton();
 		btnMakeRoom.setBackground(new Color(0xff,0x77,0x77));
-		btnMakeRoom.setBounds(270, 100, 270, 100);
+		btnMakeRoom.setBounds(0, 100, 540, 100);
 		btnMakeRoom.setBorder(new EmptyBorder(0,0,0,0));
 		btnMakeRoom.setFont(new Font("¸¼Àº °íµñ" , Font.PLAIN , 40));
 		btnMakeRoom.setText("¹æ ¸¸µé±â");
+		btnMakeRoom.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				MainFrame.getInstance().changeView(MakeRoomView.getInstance());
+			}
+		});
 		this.add(btnMakeRoom);
 		
 		for(int i = 0; i < 35; i++)	// test

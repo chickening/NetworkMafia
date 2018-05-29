@@ -29,6 +29,7 @@ public class DataBase
 		addImage("img_mafia","img//mafia.png");
 		addImage("img_key","img//key.png");
 		addImage("img_lock","img//lock.png");
+		addImage("img_chat","img//chat.png");
 	}
 	void addImage(String name , String src)
 	{
