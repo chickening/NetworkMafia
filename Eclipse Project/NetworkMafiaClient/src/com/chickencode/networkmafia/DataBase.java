@@ -30,6 +30,7 @@ public class DataBase
 		addImage("img_key","img//key.png");
 		addImage("img_lock","img//lock.png");
 		addImage("img_chat","img//chat.png");
+		addImage("img_person" ,"img//person.png");
 	}
 	void addImage(String name , String src)
 	{

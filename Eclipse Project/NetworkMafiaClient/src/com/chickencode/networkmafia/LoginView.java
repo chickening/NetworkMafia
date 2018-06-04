@@ -81,6 +81,9 @@ public class LoginView extends JPanel
 		btnLogin.setBackground(new Color(0xaa,0xff,0xaa));
 		btnLogin.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				/*
+				 * SSL 로그인 코드 추가
+				 */
 				MainFrame.getInstance().changeView(LobbyView.getInstance());
 			}
 		});
