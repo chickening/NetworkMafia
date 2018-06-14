@@ -2,8 +2,10 @@ package com.chickencode.networkmafia;
 
 public class Main
 {
-	static void main(String args[])
+	static public void main(String args[])
 	{
-			
+		LoginServer server = new LoginServer();
+		server.run();
+	
 	}
 }

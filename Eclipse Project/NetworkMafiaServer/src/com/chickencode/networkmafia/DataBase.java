@@ -5,6 +5,7 @@ import java.util.HashSet;
 
 public class DataBase
 {
+	private String sshKeyPassword;
 	
 	private HashMap<String, String> loginMap;
 	private HashSet<String> loginUser;

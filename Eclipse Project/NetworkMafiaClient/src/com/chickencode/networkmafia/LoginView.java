@@ -8,7 +8,16 @@ import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyListener;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.util.concurrent.TimeoutException;
 
+import javax.naming.TimeLimitExceededException;
+import javax.net.ssl.SSLServerSocketFactory;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
@@ -40,7 +49,8 @@ public class LoginView extends JPanel
 		inputId.addFocusListener(new FocusListener() 	//placeHolder 효과
 		{
 			boolean first = true;
-			public void focusGained(FocusEvent e) {
+			public void focusGained(FocusEvent e) 
+			{
 				if(first)
 				{
 					first = false;
@@ -84,7 +94,29 @@ public class LoginView extends JPanel
 				/*
 				 * SSL 로그인 코드 추가
 				 */
-				MainFrame.getInstance().changeView(LobbyView.getInstance());
+				try
+				{
+					SSLSocketFactory factory = (SSLSocketFactory)SSLSocketFactory.getDefault();
+					SSLSocket socket = (SSLSocket)factory.createSocket("localHost", 14444);
+					
+					BufferedWriter output = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+					BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+					output.write("Login:" +inputId.getText() + ":" + inputPassword.getText());
+					
+			/*
+					while(!input.ready())
+					{
+						socket.
+					}
+					*/ // 보충ㅋ
+					String getLine = input.readLine();
+					if(getLine.equals("1"))
+						MainFrame.getInstance().changeView(LobbyView.getInstance());
+				}
+				catch(Exception ec)
+				{
+					ec.printStackTrace();
+				}
 			}
 		});
 		this.add(btnLogin);

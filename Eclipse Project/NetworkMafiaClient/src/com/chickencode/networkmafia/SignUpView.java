@@ -31,16 +31,19 @@ public class SignUpView extends JPanel
 		inputId.setBorder(new EmptyBorder(0, 0, 0, 0));
 		inputId.setFont(new Font("¸¼Àº °íµñ" , Font.PLAIN , 30));
 		this.add(inputId);
+		
 		inputPassword = new JPasswordField();
 		inputPassword.setBounds(150,400,340,70);
 		inputPassword.setBorder(new EmptyBorder(0, 0, 0, 0));
 		inputPassword.setFont(new Font("¸¼Àº °íµñ" , Font.PLAIN , 30));
 		this.add(inputPassword);
+		
 		inputRecheckPassword = new JPasswordField();
 		inputRecheckPassword.setBounds(150,500,340,70);
 		inputRecheckPassword.setBorder(new EmptyBorder(0, 0, 0, 0));
 		inputRecheckPassword.setFont(new Font("¸¼Àº °íµñ" , Font.PLAIN , 30));
 		this.add(inputRecheckPassword);
+		
 		btnCheckIdOverlap = new JButton();
 		btnCheckIdOverlap.setBounds(390, 300 ,100, 70);
 		btnCheckIdOverlap.setBorder(new EmptyBorder(0, 0, 0, 0));
