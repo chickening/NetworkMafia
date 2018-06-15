@@ -1,17 +1,20 @@
 package com.chickencode.networkmafia;
 
+import java.nio.channels.SocketChannel;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
 public class DataBase
 {
 	private String sshKeyPassword;
-	
 	private HashMap<String, String> loginMap;
 	private HashSet<String> loginUser;
-	static private DataBase instance = null;
+	private HashMap<String, PlayerInfo> players;	// id  , PlayerInfo
+	private HashMap<Integer, GameServer> gameservers;
 	private String keyStore = "";
 	private String keyPass = "";
+	public static DataBase instance;
 	public void setKeyStore(String keyStore)
 	{
 		this.keyStore = keyStore;
@@ -41,6 +44,7 @@ public class DataBase
 		 */
 		loginMap = new HashMap<>();
 		loginUser = new HashSet<>();
+		players = new HashMap<>();
 	}
 	public boolean login(String id, String password)
 	{
@@ -54,6 +58,8 @@ public class DataBase
 	}
 	public boolean signup(String id,String password)
 	{
+		if(loginMap.containsKey(id))
+			return false;
 		loginMap.put(id, password);
 		return true;
 	}
@@ -61,4 +67,34 @@ public class DataBase
 	{
 		return loginMap.containsKey(id);
 	}
+	
+	public void putPlayer(PlayerInfo info)
+	{
+		players.put(info.playerId, info);
+	}
+	public PlayerInfo getPlayer(String id)
+	{
+		return players.get(id);
+	}
+	public void removePlayer(String info)
+	{
+		players.remove(info);
+	}
+	public void putGameServer(int id , GameServer server)
+	{
+		gameservers.put(id, server);
+	}
+	public GameServer getGameServer(int id)
+	{
+		return gameservers.get(id);
+	}
+	public void removeGameServer(int id)
+	{
+		gameservers.remove(id);
+	}
+}
+class PlayerInfo
+{
+	public String playerId;
+	public SocketChannel socket;
 }

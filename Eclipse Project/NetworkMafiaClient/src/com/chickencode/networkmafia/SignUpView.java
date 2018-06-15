@@ -105,28 +105,31 @@ public class SignUpView extends JPanel
 			@Override
 			public void actionPerformed(ActionEvent e) 
 			{
-				if(inputPassword.getText() != inputRecheckPassword.getText())
+				if(!inputPassword.getText().equals(inputRecheckPassword.getText()))
 					labelState.setText("비밀번호를 다시 확인해주세요!");
-				try 
+				else
 				{
-					SSLSocket socket = DataBase.getDataBase().connectToLoginServer();
-					BufferedWriter output = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-					BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-					output.write("SignUp"+":"+inputId.getText()+":"+inputPassword.getText());
-					output.newLine();
-					output.flush();
-					String getLine;
-					if((getLine = input.readLine()) == null);
-					if(getLine.equals("1"))
-						MainFrame.getInstance().changeView(LoginView.getInstance());
-					else if(getLine.equals("0"))
-						labelState.setText("회원가입에 실패하엿습니다.");
-							
-							
-				} 
-				catch (Exception e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+					try 
+					{
+						SSLSocket socket = DataBase.getDataBase().connectToLoginServer();
+						BufferedWriter output = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+						BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+						output.write("SignUp"+":"+inputId.getText()+":"+inputPassword.getText());
+						output.newLine();
+						output.flush();
+						String getLine;
+						if((getLine = input.readLine()) == null);
+						if(getLine.equals("1"))
+							MainFrame.getInstance().changeView(LoginView.getInstance());
+						else if(getLine.equals("0"))
+							labelState.setText("회원가입에 실패하엿습니다.");
+								
+								
+					} 
+					catch (Exception e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
 				}
 			}
 		});
