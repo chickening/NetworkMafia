@@ -17,8 +17,9 @@ public class LobbyServer {
 	private Selector selector;
 	private ServerSocketChannel serverChannel;
 	private ServerSocket serverSocket;
-	private ArrayList roomList = new ArrayList();
 	private ArrayList list = new ArrayList();
+	
+	private ArrayList roomList = new ArrayList();
 	public LobbyServer() {
 		
 			try { //채널 관리 하는 곳 = Selector
@@ -111,12 +112,11 @@ public class LobbyServer {
 			buffer.rewind();
 		}
 	}
-
 	
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		new LobbyServer();
+//		new ChatingServer();
 	}
 
 }

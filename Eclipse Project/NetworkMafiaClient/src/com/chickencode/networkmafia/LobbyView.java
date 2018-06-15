@@ -32,7 +32,7 @@ public class LobbyView extends JPanel
 	}
 	
 	
-	private LobbyView()
+	public LobbyView()
 	{
 		this.setBounds(0, 0, 540, 960);
 		this.setBackground(new Color(0X11 ,0X11, 0X11));

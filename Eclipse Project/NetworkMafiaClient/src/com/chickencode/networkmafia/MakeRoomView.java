@@ -29,6 +29,7 @@ public class MakeRoomView extends JPanel
 	JTextField inputName;
 	JPasswordField inputPassword;
 	JButton btnMakeRoom;
+	
 	private MakeRoomView()
 	{
 		this.setBounds(0,0,540,960);

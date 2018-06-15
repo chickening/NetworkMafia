@@ -3,6 +3,8 @@ package com.chickencode.networkmafia;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -15,6 +17,7 @@ import javax.swing.border.LineBorder;
 
 public class GameRoomView extends JPanel
 {
+	LobbyView lv = new LobbyView();
 	static private boolean haveInstance = false;
 	static private GameRoomView instance;
 	static public GameRoomView getInstance()	//SingleTon
@@ -40,6 +43,13 @@ public class GameRoomView extends JPanel
 		this.setBounds(0,0,540,960);
 		
 		btnExit = new JButton("³ª°¡±â");
+		btnExit.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				
+//				MainFrame.getInstance().changeView(MakeRoomView.getInstance());
+			}
+		});
+
 		btnExit.setBackground(new Color(0xff,0x44,0x44));
 		btnExit.setBorder(new EmptyBorder(0,0,0,0));
 		btnExit.setFont(new Font("¸¼Àº °íµñ" , Font.PLAIN , 40)); 
