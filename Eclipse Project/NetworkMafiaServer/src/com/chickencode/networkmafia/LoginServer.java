@@ -2,9 +2,14 @@ package com.chickencode.networkmafia;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.security.KeyStore;
 
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
@@ -15,11 +20,24 @@ public class LoginServer implements Runnable
 	{
 		try
 		{
-			System.setProperty("javax.net.ssl.keyStore", "C:\\Users\\chickening\\Documents\\GitHub\\NetworkMafia\\Eclipse Project\\NetworkMafiaServer\\bin\\.keystore\\SSLSocketServerKey");
-			System.setProperty("javax.net.ssl.keyStorePassword","123456");
-			System.setProperty("javax.net.debug","ssl");
-			SSLServerSocketFactory factory = (SSLServerSocketFactory)SSLServerSocketFactory.getDefault();
-			SSLServerSocket serverSocket = (SSLServerSocket)factory.createServerSocket(14444);
+			int port = 1115;
+			System.setProperty("javax.net.ssl.trustStore", "C:\\Program Files\\Java\\jre1.8.0_161\\lib\\security\\cacerts");
+			String keyStore  =DataBase.getDataBase().getKeyStore();
+			String keyStorePass = DataBase.getDataBase().getkeyPass();
+			String keyPass = DataBase.getDataBase().getkeyPass();
+		//	System.setProperty("javax.net.debug","ssl");
+	    	KeyStore ks;
+			KeyManagerFactory kmf;
+			SSLContext sc;
+			ks = KeyStore.getInstance("JKS");
+			ks.load(new FileInputStream(keyStore), keyStorePass.toCharArray());
+			kmf = KeyManagerFactory.getInstance("SunX509"); 
+			kmf.init(ks, keyPass.toCharArray());
+			sc = SSLContext.getInstance("TLS");
+			sc.init(kmf.getKeyManagers(), null, null);
+			SSLServerSocketFactory factory = sc.getServerSocketFactory();
+			SSLServerSocket serverSocket = (SSLServerSocket)factory.createServerSocket(port);
+			
 			while(true)
 			{
 				SSLSocket clientSocket = (SSLSocket)serverSocket.accept();
@@ -37,7 +55,7 @@ public class LoginServer implements Runnable
 class ReadWatingServer implements Runnable
 {
 	private SSLSocket clientSocket;
-	private final long timeout = 3000;	// 3초
+	private final long timeout = 8000;	// 3초
 	ReadWatingServer(SSLSocket clientSocket)
 	{
 		this.clientSocket = clientSocket;
@@ -49,7 +67,9 @@ class ReadWatingServer implements Runnable
 			long firstTime = System.currentTimeMillis();	// timeOut 구현
 			BufferedReader input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 			BufferedWriter output = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
-			while(!input.ready())
+			String info;
+			System.out.println("하용");
+			while((info = input.readLine()) == null)
 			{
 				if(System.currentTimeMillis() - firstTime >= timeout)
 				{
@@ -60,7 +80,7 @@ class ReadWatingServer implements Runnable
 					return;
 				}
 			}
-					String info = input.readLine();
+					
 					System.out.println("받은 정보 : " + info);
 					String args[] = info.split(":");
 					/*
@@ -82,7 +102,7 @@ class ReadWatingServer implements Runnable
 					{
 						String id = args[1];
 						String ps = args[2];
-						boolean success = DataBase.getInstance().login(id,ps);
+						boolean success = DataBase.getDataBase().login(id,ps);
 						if(success)
 							output.write("1");
 						else
@@ -92,7 +112,7 @@ class ReadWatingServer implements Runnable
 					{
 						String id = args[1];
 						String ps = args[2];
-						boolean success = DataBase.getInstance().signup(id, ps);
+						boolean success = DataBase.getDataBase().signup(id, ps);
 						if(success)
 							output.write("1");
 						else
@@ -101,7 +121,7 @@ class ReadWatingServer implements Runnable
 					else if(args[0].startsWith("Check"))
 					{
 						String id = args[1];
-						boolean overlap = DataBase.getInstance().checkId(id);
+						boolean overlap = DataBase.getDataBase().checkId(id);
 						if(overlap)
 							output.write("1");
 						else
@@ -109,6 +129,8 @@ class ReadWatingServer implements Runnable
 					}
 					else
 						service = false;
+					output.newLine();
+					output.flush();
 					input.close();
 					output.close();
 					clientSocket.close();

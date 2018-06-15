@@ -1,11 +1,22 @@
-package com.chickencode.networkmafia;
+package com.chickencode.networkmafia;import java.io.File;
+
+import javax.xml.crypto.Data;
 
 public class Main 
 {
 	public static void main(String args[])
 	{
-		System.setProperty("javax.net.ssl.keyStore", "C:\\Users\\chickening\\Documents\\GitHub\\NetworkMafia\\Eclipse Project\\NetworkMafiaClient\\bin\\.keystore\\SSLSocketClient");
-		System.setProperty("javax.net.ssl.keyStorePassword","123456");
+		/*if(args.length != 2)
+		{
+			
+			System.out.println("java -Djavax.net.ssl.trustStore=trustedcerts className keystore keypasss");
+			return;
+		}*/
+		DataBase.getDataBase().setKeyStore("C:\\keystore\\clientKey");
+		DataBase.getDataBase().setKeyPass("123456");
+		System.setProperty("javax.net.ssl.trustStore", "C:\\keystore\\cacerts");
+		System.setProperty("javax.net.ssl.keyStore", DataBase.getDataBase().getKeyStore());
+		System.setProperty("javax.net.ssl.keyStorePassword", DataBase.getDataBase().getkeyPass());
 		MainFrame.getInstance();
 
 	}

@@ -3,12 +3,21 @@ package com.chickencode.networkmafia;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 
+import javax.net.ssl.SSLSocket;
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
+import javax.xml.crypto.Data;
 
 public class SignUpView extends JPanel
 {
@@ -22,10 +31,17 @@ public class SignUpView extends JPanel
 	
 	private JButton btnCheckIdOverlap;
 	private JButton btnSignUp;
+	private JLabel labelState;
 	private SignUpView()
 	{
 		this.setBounds(0,0,540,960);
 		this.setLayout(null); 
+		
+		labelState = new JLabel();
+		labelState.setBounds(10, 10, 300, 40);
+		labelState.setForeground(new Color(0xff,0x66,0x66));
+		this.add(labelState);
+		
 		inputId = new JTextField();
 		inputId.setBounds(150,300,240,70);
 		inputId.setBorder(new EmptyBorder(0, 0, 0, 0));
@@ -50,6 +66,34 @@ public class SignUpView extends JPanel
 		btnCheckIdOverlap.setFont(new Font("맑은 고딕" , Font.PLAIN , 30));
 		btnCheckIdOverlap.setBackground(new Color(0xFF,0xCC,0x44));
 		btnCheckIdOverlap.setText("검사");
+		btnCheckIdOverlap.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				try 
+				{
+					SSLSocket socket = DataBase.getDataBase().connectToLoginServer();
+					BufferedWriter output = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+					BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+					output.write("Check"+":"+inputId.getText());
+					output.newLine();
+					output.flush();
+					String getLine;
+					if((getLine = input.readLine()) == null);
+					if(getLine.equals("1"))
+						labelState.setText("중복입니다.");
+					else if(getLine.equals("0"))
+						labelState.setText("중복이 아닙니다.");
+							
+							
+				} 
+				catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+		});
 		this.add(btnCheckIdOverlap);
 		
 		btnSignUp = new JButton();
@@ -57,6 +101,35 @@ public class SignUpView extends JPanel
 		btnSignUp.setFont(new Font("맑은 고딕" , Font.PLAIN , 40));
 		btnSignUp.setBackground(new Color(0xFF,0xCC,0x44));
 		btnSignUp.setText("회원 가입");
+		btnSignUp.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) 
+			{
+				if(inputPassword.getText() != inputRecheckPassword.getText())
+					labelState.setText("비밀번호를 다시 확인해주세요!");
+				try 
+				{
+					SSLSocket socket = DataBase.getDataBase().connectToLoginServer();
+					BufferedWriter output = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+					BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+					output.write("SignUp"+":"+inputId.getText()+":"+inputPassword.getText());
+					output.newLine();
+					output.flush();
+					String getLine;
+					if((getLine = input.readLine()) == null);
+					if(getLine.equals("1"))
+						MainFrame.getInstance().changeView(LoginView.getInstance());
+					else if(getLine.equals("0"))
+						labelState.setText("회원가입에 실패하엿습니다.");
+							
+							
+				} 
+				catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+		});
 		this.add(btnSignUp);
 	}
 	static public SignUpView getInstance()

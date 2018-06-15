@@ -96,20 +96,15 @@ public class LoginView extends JPanel
 				 */
 				try
 				{
-					SSLSocketFactory factory = (SSLSocketFactory)SSLSocketFactory.getDefault();
-					SSLSocket socket = (SSLSocket)factory.createSocket("localHost", 14444);
-					
+					SSLSocket socket = DataBase.getDataBase().connectToLoginServer();
 					BufferedWriter output = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 					BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 					output.write("Login:" +inputId.getText() + ":" + inputPassword.getText());
-					
-			/*
-					while(!input.ready())
-					{
-						socket.
-					}
-					*/ // º¸Ãæ¤»
-					String getLine = input.readLine();
+					output.newLine();
+					output.flush();
+					String getLine;
+					while((getLine = input.readLine()) == null);
+					System.out.println(getLine);
 					if(getLine.equals("1"))
 						MainFrame.getInstance().changeView(LobbyView.getInstance());
 				}

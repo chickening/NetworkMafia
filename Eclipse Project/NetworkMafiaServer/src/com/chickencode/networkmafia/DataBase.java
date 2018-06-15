@@ -10,7 +10,25 @@ public class DataBase
 	private HashMap<String, String> loginMap;
 	private HashSet<String> loginUser;
 	static private DataBase instance = null;
-	static public DataBase getInstance()
+	private String keyStore = "";
+	private String keyPass = "";
+	public void setKeyStore(String keyStore)
+	{
+		this.keyStore = keyStore;
+	}
+	public void setKeyPass(String keyPass)
+	{
+		this.keyPass = keyPass;
+	}
+	public String getKeyStore()
+	{
+		return keyStore;
+	}
+	public String getkeyPass()
+	{
+		return keyPass;
+	}
+	static public DataBase getDataBase()
 	{
 		if(instance == null)
 			instance = new DataBase();
@@ -21,6 +39,8 @@ public class DataBase
 		/*
 		 * 아이디 비밀번호 가져오는 소스
 		 */
+		loginMap = new HashMap<>();
+		loginUser = new HashSet<>();
 	}
 	public boolean login(String id, String password)
 	{

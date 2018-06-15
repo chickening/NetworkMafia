@@ -2,25 +2,56 @@ package com.chickencode.networkmafia;
 
 import java.awt.Image;
 import java.awt.Toolkit;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.util.HashMap;
+
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 
 public class DataBase 
 {
 	private HashMap<String , Image> imgData;
-	private static boolean haveInstance = false;
-	private static DataBase instance;
-	private  DataBase()
+	private static DataBase instance = null;
+	private String keyStore = "";
+	private String keyPass = "";
+	public void setKeyStore(String keyStore)
+	{
+		this.keyStore = keyStore;
+	}
+	public void setKeyPass(String keyPass)
+	{
+		this.keyPass = keyPass;
+	}
+	public String getKeyStore()
+	{
+		return keyStore;
+	}
+	public String getkeyPass()
+	{
+		return keyPass;
+	}
+	public SSLSocket connectToLoginServer() throws Exception
+	{
+		SSLSocketFactory factory = (SSLSocketFactory)SSLSocketFactory.getDefault();
+		SSLSocket socket = (SSLSocket)factory.createSocket("127.0.0.1", 1115);
+		String [] supported = socket.getSupportedCipherSuites();
+		socket.setEnabledCipherSuites(supported);
+		socket.startHandshake();
+		return socket;
+	}
+	private DataBase()
 	{
 		imgData = new HashMap<String , Image>();
 		init();
 	}
 	public static DataBase getDataBase()
 	{
-		if(!haveInstance)
-		{
-			haveInstance = false;
+
+		if(instance == null)
 			instance = new DataBase();
-		}
 		return instance;
 	}
 	void init()
