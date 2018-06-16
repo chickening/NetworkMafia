@@ -4,6 +4,8 @@ import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 public class DataBase
 {
@@ -91,6 +93,14 @@ public class DataBase
 	public void removeGameServer(int id)
 	{
 		gameservers.remove(id);
+	}
+	public ArrayList<GameServer> getAllGameServer()
+	{
+		ArrayList<GameServer> r = new ArrayList<>();
+		Iterator<Integer> keyIt = gameservers.keySet().iterator();
+		while(keyIt.hasNext())
+			r.add(gameservers.get(keyIt.next()));
+		return r;
 	}
 }
 class PlayerInfo

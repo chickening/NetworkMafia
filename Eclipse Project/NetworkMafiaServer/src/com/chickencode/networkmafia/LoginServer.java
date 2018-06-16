@@ -21,7 +21,6 @@ public class LoginServer implements Runnable
 		try
 		{
 			int port = 1115;
-			System.setProperty("javax.net.ssl.trustStore", "C:\\Program Files\\Java\\jre1.8.0_161\\lib\\security\\cacerts");
 			String keyStore  =DataBase.getDataBase().getKeyStore();
 			String keyStorePass = DataBase.getDataBase().getkeyPass();
 			String keyPass = DataBase.getDataBase().getkeyPass();

@@ -5,10 +5,18 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.Socket;
 import java.util.ArrayList;
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+
+import org.omg.Messaging.SyncScopeHelper;
 
 public class LobbyView extends JPanel
 {
@@ -17,8 +25,9 @@ public class LobbyView extends JPanel
 	private JPanel roomPane;
 	private JButton btnPrev;
 	private JButton btnNext;
-	private JButton btnEntirely;	//ÀüÀû
+	private JButton btnRefresh;	//ÀüÀû
 	private JButton btnMakeRoom;	//¹æ¸¸µé±â
+	private JLabel labelState;
 	private ArrayList<Room> roomList;
 	private int page = 0;
 	public static LobbyView getInstance()
@@ -41,6 +50,13 @@ public class LobbyView extends JPanel
 		roomPane.setBounds(0,200,560,660);
 		roomPane.setBackground(new Color(0x33,0x33,0x33));
 		this.add(roomPane);
+		
+		labelState = new JLabel();
+		labelState.setForeground(new Color(0xff,0x66,0x66));
+		labelState.setBounds(10,10,300,50);
+		this.add(labelState);
+		
+
 		btnPrev = new JButton();
 		btnPrev.setBackground(new Color(0xff,0xff,0xaa));
 		btnPrev.setBounds(0, 860, 270, 100);
@@ -71,9 +87,49 @@ public class LobbyView extends JPanel
 		});
 		this.add(btnNext);
 		
+		btnRefresh = new JButton();
+		btnRefresh.setBackground(new Color(0xff,0x77,0x77));
+		btnRefresh.setBounds(0, 100, 270, 100);
+		btnRefresh.setBorder(new EmptyBorder(0,0,0,0));
+		btnRefresh.setFont(new Font("¸¼Àº °íµñ" , Font.PLAIN , 40));
+		btnRefresh.setText("»õ·Î °íÄ§");
+		btnRefresh.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try
+				{
+					Socket client = DataBase.getDataBase().connectToLobbyServer();
+					BufferedReader input = new BufferedReader(new InputStreamReader(client.getInputStream()));
+					BufferedWriter output = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
+					output.write("refresh");
+					output.newLine();
+					output.flush();
+					String info;
+					while((info = input.readLine()) == null);
+					roomList = new ArrayList<>();
+					String[] args = info.split(":");
+					int len = args.length / 4;
+					for(int i = 0; i < len; i++)
+					{
+						int roomId = Integer.parseInt(args[i * 4]);
+						String roomName = args[i * 4 + 1];
+						String owner = args[i * 4 + 2];
+						int playerNumber = Integer.parseInt(args[i * 4 + 3]);
+					    roomList.add(new Room(roomId , roomName , owner , playerNumber));
+					}
+					refreshLobby();
+				}
+				catch(Exception ex)
+				{
+					ex.printStackTrace();
+				}
+			}
+		});
+		
 		btnMakeRoom = new JButton();
 		btnMakeRoom.setBackground(new Color(0xff,0x77,0x77));
-		btnMakeRoom.setBounds(0, 100, 540, 100);
+		btnMakeRoom.setBounds(270, 100, 270, 100);
 		btnMakeRoom.setBorder(new EmptyBorder(0,0,0,0));
 		btnMakeRoom.setFont(new Font("¸¼Àº °íµñ" , Font.PLAIN , 40));
 		btnMakeRoom.setText("¹æ ¸¸µé±â");
@@ -88,7 +144,7 @@ public class LobbyView extends JPanel
 		
 		for(int i = 0; i < 35; i++)	// test
 		{
-			roomList.add(new Room(10,"»¡¶û µé¾î¿Í" ,"Ä¡Å²", i,10));
+			roomList.add(new Room(10,"»¡¶û µé¾î¿Í" ,"Ä¡Å²", i));
 		}
 		refreshLobby();
 	}
@@ -124,6 +180,42 @@ public class LobbyView extends JPanel
 			button.setBounds(0,i % 6 * 110, 540, 110);
 			button.setBorder(new EmptyBorder(0, 0, 0, 0));
 			button.setBackground(new Color(0x22,0x22,0x22));
+			button.addActionListener(new ActionListener()
+			{
+				public void actionPerformed(ActionEvent arg0) 
+				{
+					try
+					{
+						Socket client = DataBase.getDataBase().connectToLobbyServer();
+						BufferedReader input = new BufferedReader(new InputStreamReader(client.getInputStream()));
+						BufferedWriter output = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
+						output.write("join:" + room.getId() + ":" + DataBase.getDataBase().getId());
+						String info;
+						while((info = input.readLine()) == null);
+						String args[] = info.split(":");
+						if(info.startsWith("1"))
+						{
+							int port = Integer.parseInt(args[1]);
+							//gameView¿¡ port Àü´Þ ¸¸µé±â
+							MainFrame.getInstance().changeView(GameRoomView.getInstance());
+						}
+						else if(info.startsWith("2"))
+						{
+							labelState.setText("ÇÃ·¹ÀÌ¾î°¡ ²ËÃ¡½À´Ï´Ù.");
+						}
+						else if(info.startsWith("3"))
+						{
+							labelState.setText("¼­¹ö Error");
+						}
+					}
+					catch(Exception e)
+					{
+						
+					}
+					
+				}
+			});
+			
 			roomPane.add(button);
 		}
 		roomPane.repaint();
@@ -136,21 +228,22 @@ public class LobbyView extends JPanel
 		g.setFont(new Font("¸¼Àº °íµñ" , Font.BOLD , 77));
 		g.drawString("LOBBY", 140 , 77);
 	}
+	
 }
 class Room
 {
 	private int id;
 	private String name;
 	private int nowNumber;
-	private int maxNumber;
+	private int maxNumber = 10;
 	private String owner;           
-	Room(int id ,String name,String owner , int nowNumber, int maxNumber)
+	Room(int id ,String name,String owner , int nowNumber)
 	{
 		this.id = id;
 		this.name = name;
 		this.owner = owner;
 		this.nowNumber = nowNumber;
-		this.maxNumber = maxNumber;
+		//this.maxNumber = maxNumber;
 	}
 	public int getId()
 	{

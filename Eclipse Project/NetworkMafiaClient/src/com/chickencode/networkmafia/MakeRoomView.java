@@ -5,8 +5,14 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.Socket;
 
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
@@ -26,6 +32,7 @@ public class MakeRoomView extends JPanel
 		return instance;
 	}
 	
+	JLabel labelState;
 	JTextField inputName;
 	JPasswordField inputPassword;
 	JButton btnMakeRoom;
@@ -34,17 +41,17 @@ public class MakeRoomView extends JPanel
 		this.setBounds(0,0,540,960);
 		this.setBackground(new Color(0x22,0x22,0x22));
 		
+		
 		inputName = new JTextField();
 		inputName.setBounds(50, 230, 440, 70);
 		inputName.setBorder(new EmptyBorder(0, 0, 0, 0));
 		inputName.setFont(new Font("∏º¿∫ ∞ÌµÒ" , Font.PLAIN , 35));
 		this.add(inputName);
 		
-		inputPassword = new JPasswordField();
-		inputPassword.setBounds(50, 430, 440, 70);
-		inputPassword.setBorder(new EmptyBorder(0, 0, 0, 0));
-		inputPassword.setFont(new Font("∏º¿∫ ∞ÌµÒ" , Font.PLAIN , 35));
-		this.add(inputPassword);
+		labelState = new JLabel();
+		labelState.setBounds(10,10,300,50);
+		labelState.setForeground(new Color(0xff,0x66,0x66));
+		this.add(labelState);
 		
 		btnMakeRoom = new JButton();
 		btnMakeRoom.setBounds(50, 600,440, 100);
@@ -56,7 +63,28 @@ public class MakeRoomView extends JPanel
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-					MainFrame.getInstance().changeView(GameRoomView.getInstance());
+				try
+				{
+				
+					Socket client = DataBase.getDataBase().connectToLobbyServer();
+					BufferedReader input = new BufferedReader(new InputStreamReader(client.getInputStream()));
+					BufferedWriter output = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
+					String info = null;
+					output.write("makeroom:" +  inputName.getText() +":"  + DataBase.getDataBase().getId());
+					while((info = input.readLine()) == null);
+					if(info.equals("1"))
+					{
+						MainFrame.getInstance().changeView(GameRoomView.getInstance());
+					}
+					else if(info.equals("0"))
+					{
+						labelState.setText("πÊ∏∏µÈ±‚ Ω«∆–¿‘¥œ¥Ÿ");
+					}
+					
+				}catch(Exception ex)
+				{
+					ex.printStackTrace();
+				}
 			}
 		});
 		this.add(btnMakeRoom);
@@ -68,7 +96,6 @@ public class MakeRoomView extends JPanel
 		g.setColor(Color.WHITE);
 		g.setFont(new Font("∏º¿∫ ∞ÌµÒ" , Font.PLAIN , 40));
 		g.drawString("πÊ ¿Ã∏ß" ,200, 190);
-		g.drawString("∫Òπ–π¯»£" ,200, 390);
 		
 	}
 }

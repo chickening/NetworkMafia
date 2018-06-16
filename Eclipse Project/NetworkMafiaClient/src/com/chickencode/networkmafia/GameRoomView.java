@@ -14,16 +14,12 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 
 public class GameRoomView extends JPanel
-{
-	static private boolean haveInstance = false;
-	static private GameRoomView instance;
+{;
+	static private GameRoomView instance = null;
 	static public GameRoomView getInstance()	//SingleTon
 	{
-		if(!haveInstance)
-		{
-			haveInstance = false;
+		if(instance == null)
 			instance = new GameRoomView();
-		}
 		return instance;
 	}
 	
@@ -34,6 +30,24 @@ public class GameRoomView extends JPanel
 	JScrollPane scrollChat;
 	/* 게임 기능 버튼 추가 */
 	
+	/*
+	 * Protocol
+	 * 
+	 * 받기
+	 * 
+		 * 처음에 직업 배정 : job : 직업
+		 * 채팅 : chat : number :  content
+		 * 누구 죽음 : die : number
+		 * 경찰조사 : prove : number : yesorno
+		 * 플레이어 정보 playerinfo : id[배열]
+		 * 보내기
+		 * 채팅 chat : content
+		 * 투표 vote : number
+		 * 직업 선택 : select : number
+		 * 플레이어 정보 : playerinfo
+	 * 
+	 * 
+	 */
 	private GameRoomView()
 	{
 		this.setBackground(new Color(0x22,0x22,0x22));
@@ -61,7 +75,7 @@ public class GameRoomView extends JPanel
 		listChat.setBorder(new EmptyBorder(0,0,0,0));
 		listChat.setForeground(Color.white);
 		listChat.setFont(new Font("맑은 고딕" , Font.PLAIN , 12)); 
-		listChat.setBounds(0,560,540,230);
+		//listChat.setBounds(0,560,540,230);
 		
 		scrollChat  = new JScrollPane();
 		scrollChat.setForeground(Color.white);
@@ -99,4 +113,14 @@ public class GameRoomView extends JPanel
 		
 		/*나중에 아이디 추가 */
 	}
+}
+class GameData
+{
+	
+}
+class PlayerData
+{
+	int number;
+	String id;
+	int 
 }

@@ -6,6 +6,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.net.Socket;
 import java.util.HashMap;
 
 import javax.net.ssl.SSLSocket;
@@ -51,6 +52,11 @@ public class DataBase
 		String [] supported = socket.getSupportedCipherSuites();
 		socket.setEnabledCipherSuites(supported);
 		socket.startHandshake();
+		return socket;
+	}
+	public Socket connectToLobbyServer() throws Exception
+	{
+		Socket socket = new Socket("127.0.0.1", lobbyServerPort);
 		return socket;
 	}
 	private DataBase()
