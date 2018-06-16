@@ -197,7 +197,8 @@ public class LobbyView extends JPanel
 						{
 							int port = Integer.parseInt(args[1]);
 							//gameView에 port 전달 만들기
-							MainFrame.getInstance().changeView(GameRoomView.getInstance());
+							GameRoomView.getInstance().setPort(port);
+							=MainFrame.getInstance().changeView(GameRoomView.getInstance());
 						}
 						else if(info.startsWith("2"))
 						{
