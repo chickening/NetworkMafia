@@ -19,6 +19,7 @@ public class DataBase
 	private String keyStore = "";
 	private String keyPass = "";
 	private String id = "";
+
 	public final int loginServerPort = 1115;
 	public final int lobbyServerPort = 1116;
 	public void setKeyStore(String keyStore)
@@ -48,7 +49,7 @@ public class DataBase
 	public SSLSocket connectToLoginServer() throws Exception
 	{
 		SSLSocketFactory factory = (SSLSocketFactory)SSLSocketFactory.getDefault();
-		SSLSocket socket = (SSLSocket)factory.createSocket("127.0.0.1", loginServerPort);
+		SSLSocket socket = (SSLSocket)factory.createSocket("localhost", loginServerPort);
 		String [] supported = socket.getSupportedCipherSuites();
 		socket.setEnabledCipherSuites(supported);
 		socket.startHandshake();
@@ -56,7 +57,8 @@ public class DataBase
 	}
 	public Socket connectToLobbyServer() throws Exception
 	{
-		Socket socket = new Socket("127.0.0.1", lobbyServerPort);
+		Socket socket = new Socket("localhost", lobbyServerPort);
+	
 		return socket;
 	}
 	private DataBase()

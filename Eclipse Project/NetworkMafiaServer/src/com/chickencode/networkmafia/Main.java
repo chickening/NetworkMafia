@@ -1,5 +1,7 @@
 package com.chickencode.networkmafia;
 
+import com.chickencode.networkmafia.GameServer.PlayerData;
+
 public class Main
 {
 	static public void main(String args[])
@@ -15,6 +17,10 @@ public class Main
 		DataBase.getDataBase().setKeyPass("123456");
 		System.setProperty("javax.net.ssl.trustStore", "C:\\keystore\\cacerts");
 		LoginServer server = new LoginServer();
-		server.run();
+		new Thread(server).start();
+		new Thread(new LobbyServer()).start();;
+		GameServer testServer = new GameServer(99, 7000);
+		DataBase.getDataBase().putGameServer(99, testServer);
+		testServer.createTestPlayer();
 	}
 }

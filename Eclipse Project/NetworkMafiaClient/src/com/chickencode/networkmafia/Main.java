@@ -12,7 +12,7 @@ public class Main
 			System.out.println("java -Djavax.net.ssl.trustStore=trustedcerts className keystore keypasss");
 			return;
 		}*/
-		System.setProperty("javax.net.debug","ssl");
+		//System.setProperty("javax.net.debug","ssl");
 		DataBase.getDataBase().setKeyStore("C:\\keystore\\clientKey");
 		DataBase.getDataBase().setKeyPass("123456");
 		System.setProperty("javax.net.ssl.trustStore", "C:\\keystore\\cacerts");

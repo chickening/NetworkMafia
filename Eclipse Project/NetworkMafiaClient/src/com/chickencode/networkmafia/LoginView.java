@@ -23,6 +23,7 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
+import javax.xml.crypto.Data;
 
 public class LoginView extends JPanel
 {
@@ -106,7 +107,10 @@ public class LoginView extends JPanel
 					while((getLine = input.readLine()) == null);
 					System.out.println(getLine);
 					if(getLine.equals("1"))
+					{
+						DataBase.getDataBase().setId(inputId.getText());
 						MainFrame.getInstance().changeView(LobbyView.getInstance());
+					}
 				}
 				catch(Exception ec)
 				{

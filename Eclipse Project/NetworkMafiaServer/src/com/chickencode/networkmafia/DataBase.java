@@ -16,6 +16,8 @@ public class DataBase
 	private HashMap<Integer, GameServer> gameservers;
 	private String keyStore = "";
 	private String keyPass = "";
+	private int nextPort = 2000;
+	private int nextRoomId = 1;
 	public static DataBase instance;
 	public void setKeyStore(String keyStore)
 	{
@@ -47,6 +49,7 @@ public class DataBase
 		loginMap = new HashMap<>();
 		loginUser = new HashSet<>();
 		players = new HashMap<>();
+		gameservers = new HashMap<>();
 	}
 	public boolean login(String id, String password)
 	{
@@ -101,6 +104,15 @@ public class DataBase
 		while(keyIt.hasNext())
 			r.add(gameservers.get(keyIt.next()));
 		return r;
+	}
+	public int getNextRoomId()
+	{
+		return nextRoomId++;
+	}
+	public int getNextPort()
+	{
+		nextPort += 2;
+		return nextPort - 2;
 	}
 }
 class PlayerInfo

@@ -94,7 +94,6 @@ public class LobbyView extends JPanel
 		btnRefresh.setFont(new Font("맑은 고딕" , Font.PLAIN , 40));
 		btnRefresh.setText("새로 고침");
 		btnRefresh.addActionListener(new ActionListener() {
-			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try
@@ -109,14 +108,15 @@ public class LobbyView extends JPanel
 					while((info = input.readLine()) == null);
 					roomList = new ArrayList<>();
 					String[] args = info.split(":");
-					int len = args.length / 4;
+					int len = (args.length - 1) / 4;
+					System.out.println("[lobbyview] : " + info);
 					for(int i = 0; i < len; i++)
 					{
-						int roomId = Integer.parseInt(args[i * 4]);
-						String roomName = args[i * 4 + 1];
-						String owner = args[i * 4 + 2];
-						int playerNumber = Integer.parseInt(args[i * 4 + 3]);
-					    roomList.add(new Room(roomId , roomName , owner , playerNumber));
+						int roomId = Integer.parseInt(args[i * 4 + 1]);
+						String roomName = args[i * 4 + 2];
+						int port = Integer.parseInt(args[i * 4 + 3]);
+						int playerNumber = Integer.parseInt(args[i * 4 + 4]);
+					    roomList.add(new Room(roomId , roomName , "port : "+ port , playerNumber));
 					}
 					refreshLobby();
 				}
@@ -126,6 +126,7 @@ public class LobbyView extends JPanel
 				}
 			}
 		});
+		this.add(btnRefresh);
 		
 		btnMakeRoom = new JButton();
 		btnMakeRoom.setBackground(new Color(0xff,0x77,0x77));
@@ -141,11 +142,6 @@ public class LobbyView extends JPanel
 			}
 		});
 		this.add(btnMakeRoom);
-		
-		for(int i = 0; i < 35; i++)	// test
-		{
-			roomList.add(new Room(10,"빨랑 들어와" ,"치킨", i));
-		}
 		refreshLobby();
 	}
 	public void addLobby(Room lobby)
@@ -189,7 +185,9 @@ public class LobbyView extends JPanel
 						Socket client = DataBase.getDataBase().connectToLobbyServer();
 						BufferedReader input = new BufferedReader(new InputStreamReader(client.getInputStream()));
 						BufferedWriter output = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
-						output.write("join:" + room.getId() + ":" + DataBase.getDataBase().getId());
+						output.write("join:" + room.getId());
+						output.newLine();
+						output.flush();
 						String info;
 						while((info = input.readLine()) == null);
 						String args[] = info.split(":");
@@ -198,7 +196,8 @@ public class LobbyView extends JPanel
 							int port = Integer.parseInt(args[1]);
 							//gameView에 port 전달 만들기
 							GameRoomView.getInstance().setPort(port);
-							=MainFrame.getInstance().changeView(GameRoomView.getInstance());
+							MainFrame.getInstance().changeView(GameRoomView.getInstance());
+							GameRoomView.getInstance().game.initGame();
 						}
 						else if(info.startsWith("2"))
 						{
@@ -236,7 +235,7 @@ class Room
 	private int id;
 	private String name;
 	private int nowNumber;
-	private int maxNumber = 10;
+	private int maxNumber = 8;
 	private String owner;           
 	Room(int id ,String name,String owner , int nowNumber)
 	{

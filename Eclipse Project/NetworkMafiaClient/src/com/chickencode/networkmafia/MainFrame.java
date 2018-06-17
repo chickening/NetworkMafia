@@ -9,16 +9,12 @@ import javax.swing.text.View;
 public class MainFrame extends JFrame
 {
 	private JPanel visiableView;
-	private static MainFrame instance;
-	private static boolean haveInstance = false;
+	private static MainFrame instance = null;
 	
 	static public MainFrame getInstance()
 	{
-		if(!haveInstance)
-		{
-			haveInstance = true;
+		if(instance == null)
 			instance = new MainFrame();
-		}
 		return instance;
 	}
 	private MainFrame()

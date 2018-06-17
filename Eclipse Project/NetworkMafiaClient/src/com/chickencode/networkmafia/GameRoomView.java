@@ -3,6 +3,8 @@ package com.chickencode.networkmafia;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.BufferedReader;
@@ -35,7 +37,7 @@ public class GameRoomView extends JPanel
 			instance = new GameRoomView();
 		return instance;
 	}
-	Game game;
+	Game game = new Game();
 	JButton btnExit;
 	JButton btnStartGame;
 	JTextField inputChat;
@@ -56,13 +58,14 @@ public class GameRoomView extends JPanel
 		 * 플레이어 정보 playerinfo : id[배열]	//순서대로 number
 		 * 게임시작 : start
 		 * 게임끝 end: victory or lose
-		 * 시간 time : [0=아침,1=투표시간,2=저녁]
+		 * 시간 time : [1=아침,2=투표시간,3=저녁]
 		 * 
 		 * 보내기
 		 * 채팅 chat : content
 		 * 투표 vote : number
 		 * 직업 선택 : select : number
-		 * 플레이어 정보 : playerinfo
+		 * 플레이어 정보 : playerinfo:id
+		 * 게임종료 close
 	 * 
 	 * 
 	 */
@@ -76,27 +79,46 @@ public class GameRoomView extends JPanel
 		btnExit.setBackground(new Color(0xff,0x44,0x44));
 		btnExit.setBorder(new EmptyBorder(0,0,0,0));
 		btnExit.setFont(new Font("맑은 고딕" , Font.PLAIN , 40)); 
-		btnExit.setBounds(270,860,270,100);
+		btnExit.setBounds(0,860,540,100);
+		btnExit.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try
+				{
+					game.output.write("close");
+					game.output.newLine();
+					game.output.flush();
+					game.client.close();
+					game.client = null;
+					game.connect = false;
+					MainFrame.getInstance().changeView(LobbyView.getInstance());
+				}catch(Exception ex)
+				{
+					ex.printStackTrace();
+				}
+				
+			}
+		});
 		this.add(btnExit);
-		
+		/*
 		btnStartGame = new JButton("게임 시작");		//방장이 아니거나 게임중이면 회색으로 바뀌게 하기
 		btnStartGame.setBackground(new Color(0xff,0xff,0x44));
 		btnStartGame.setBorder(new EmptyBorder(0,0,0,0));
 		btnStartGame.setBounds(0,860,270,100);
 		btnStartGame.setFont(new Font("맑은 고딕" , Font.PLAIN , 40)); 
-		this.add(btnStartGame);
+		this.add(btnStartGame);*/
 		
 
 		listChatModel = new DefaultListModel<>();
 		listChat = new JList(listChatModel);
 		listChat.setBackground(new Color(0x22,0x22,0x22));
-		listChat.setBorder(new EmptyBorder(0,0,0,0));
+		//listChat.setBorder(new EmptyBorder(0,0,0,0));
 		listChat.setForeground(Color.white);
-		listChat.setFont(new Font("맑은 고딕" , Font.PLAIN , 12));
+		//listChat.setFont(new Font("맑은 고딕" , Font.PLAIN , 12));
 		//listChat.setBounds(0,560,540,230);
 		
 		scrollChat  = new JScrollPane();
-		scrollChat.setForeground(Color.white);
 		scrollChat.setBorder(new LineBorder(new Color(0x33,0x33,0x33),2));
 		scrollChat.setViewportView(listChat);
 		scrollChat.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER); //가로바정책
@@ -161,15 +183,19 @@ public class GameRoomView extends JPanel
 		
 		for(int i  = 0; i < Math.min(4, game.players.size()); i++)
 		{
+			if(!game.players.get(i).alive)
+				continue;
 			//g.fillRect(16, i * 136 + 16, 120, 120);
-			g.drawString(""+i + "번", 17 , i * 136);
+			g.drawString(""+i + "번", 127 , i * 136 + 17);
 			g.drawString(game.players.get(i).id, 17 , i * 136 + 130);
 			g.drawImage(DataBase.getDataBase().getImage("img_person"),17,i * 136 + 17 , 100 , 100,this);
 		}
 		for(int i  = 0; i < Math.min(4 , game.players.size() - 4); i++)
 		{
+			if(!game.players.get(i + 4).alive)
+				continue;
 			//g.fillRect(404, i * 136 + 16, 120, 120);
-			g.drawString(""+(i + 4) + "번", 405 , i * 136);
+			g.drawString(""+(i + 4) + "번", 305 , i * 136 + 17);
 			g.drawString(game.players.get(i + 4).id,405 , i * 136 + 130);
 			g.drawImage(DataBase.getDataBase().getImage("img_person"),405,i * 136 + 17 , 100 , 100,this);
 		}
@@ -185,26 +211,27 @@ public class GameRoomView extends JPanel
 		int myJob;		//[1 : 시민 	2: 마피아   3: 경찰
 		int time;	//[1 : 낮 2 : 투표시간  3 : 밤]
 		int port;
-		boolean end = false;
+		boolean connect = true;
 		ArrayList<PlayerData> players = new ArrayList<>();
 		SocketChannel chatChannel = null;
-		Socket client;
+		Socket client = null;
 		BufferedReader input;
 		BufferedWriter output;
-		public void initGameData()
+		public void initGame()
 		{
-			end = false;
+			connect = true;
 			if(client == null)
 			{
 				try 
 				{
-					chatChannel = SocketChannel.open(new InetSocketAddress("127.0.0.1", port));
-					chatChannel.configureBlocking(false);
-					if(!chatChannel.isConnected())
-						chatChannel.finishConnect();
 					client = new Socket("localHost" , port);
 					input = new BufferedReader(new InputStreamReader(client.getInputStream()));
 					output = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
+					output.write("playerinfo:" + DataBase.getDataBase().getId());
+					output.newLine();
+					output.flush();
+					
+					listChatModel.addElement("게임에 접속하신것응 환영합니다.");
 					new Thread(new GameThread()).start();
 				}catch(Exception e)
 				{
@@ -212,25 +239,21 @@ public class GameRoomView extends JPanel
 				} 
 			}
 		}
-		public void introduceJob()
-		{
-			
-		}
 		public void clickNumber(int number)
 		{
 			try
 			{
-				if(time == 0)	// 행동 없음
+				if(time == 1)	// 행동 없음
 				{
 					
 				}
-				else if(time == 1)
+				else if(time == 2)
 				{
 					output.write("vote:" + number);
 					output.newLine();
 					output.flush();
 				}
-				else if(time == 2)
+				else if(time == 3)
 				{
 					if(myJob != 0)	// 마피아 와 경찰
 					{
@@ -250,31 +273,35 @@ public class GameRoomView extends JPanel
 			{
 				try
 				{
-					while(!end)
+					while(connect)
 					{
 						String info;
 						while((info = input.readLine()) == null);
 						String args[] = info.split(":");
-						
+						System.out.println("[GameRoomView] 받은 정보 : " + info);
 						if(info.startsWith("job"))
 						{
 							myJob = Integer.parseInt(args[1]);
-							if(myJob == 0)
+							if(myJob == 1)
 							{
 								listChatModel.addElement("당신은 시민입니다.모든 마피아를 죽이세요");
 							}
-							else if(myJob == 1)
+							else if(myJob == 2)
 							{
 								String teamId = players.get(Integer.parseInt(args[2])).id;
 								listChatModel.addElement("당신은 " + teamId + "와 함께 마피아입니다");
 								listChatModel.addElement("모든 시민들을 죽이세요");
+							}
+							else if(myJob == 3)
+							{
+								listChatModel.addElement("당신은 경찰입니다.모든 마피아를 죽이세요");
 							}
 						}
 						else if(info.startsWith("die"))
 						{
 							int number = Integer.parseInt(args[1]);
 							players.get(number).alive = false;
-							listChatModel.addElement(number + "님이 사망하엿습니다.");
+							listChatModel.addElement(players.get(number).id + " 님이 사망하엿습니다.");
 						}
 						else if(info.startsWith("prove"))
 						{
@@ -287,11 +314,11 @@ public class GameRoomView extends JPanel
 						}
 						else if(info.startsWith("playerinfo"))	//number 순서대로줌
 						{
-							int len = (args.length - 1) / 4;
+							int len = (args.length - 1);
+							players.clear();
 							for(int i = 0; i < len; i++)
 							{
 								String id = args[i + 1];
-								players.clear();
 								players.add(new PlayerData(i, id));
 							}
 						}
@@ -299,16 +326,19 @@ public class GameRoomView extends JPanel
 						{
 							int newTime = Integer.parseInt(args[1]);
 							time = newTime;
-							if(time == 0)
+							if(time == 1)
 								listChatModel.addElement("아침이 되었습니다.");
-							else if(time == 1)
-								listChatModel.addElement("투표 시간이 되었습니다.");
 							else if(time == 2)
+								listChatModel.addElement("투표 시간이 되었습니다.");
+							else if(time == 3)
 								listChatModel.addElement("저녁이 되엇습니다.");
 						}
 						else if(info.startsWith("start"))
 						{
-							end = false;
+							for(int i = 0; i < game.players.size(); i++)
+								game.players.get(i).alive = true;
+							listChatModel.clear();
+							listChatModel.addElement("게임이 시작되엇습니다.");
 						}
 						else if(info.startsWith("end"))
 						{
@@ -317,8 +347,8 @@ public class GameRoomView extends JPanel
 								listChatModel.addElement("게임에서 승리하였습니다");
 							else
 								listChatModel.addElement("게임에서 패배하였습니다");
-							end = true;
 						}
+						MainFrame.getInstance().repaint();
 					}
 				}
 				catch(Exception e)

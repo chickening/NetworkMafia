@@ -41,7 +41,8 @@ public class LoginServer implements Runnable
 			{
 				SSLSocket clientSocket = (SSLSocket)serverSocket.accept();
 				ReadWatingServer ws = new ReadWatingServer(clientSocket);
-				ws.run();
+				Thread threadWs = new Thread(ws);
+				threadWs.start();
 			}
 		}
 		catch(Exception e)

@@ -21,8 +21,7 @@ import javax.xml.crypto.Data;
 
 public class SignUpView extends JPanel
 {
-	static private boolean haveInstance = false;
-	static private SignUpView instance;
+	static private SignUpView instance = null;
 	private Color colorBackground = new Color(0X11 ,0X11, 0X11);
 	
 	private JTextField inputId;
@@ -137,11 +136,8 @@ public class SignUpView extends JPanel
 	}
 	static public SignUpView getInstance()
 	{
-		if(!haveInstance)
-		{
-			haveInstance = true;
+		if(instance == null)
 			instance = new SignUpView();
-		}
 		return instance;
 	}
 	

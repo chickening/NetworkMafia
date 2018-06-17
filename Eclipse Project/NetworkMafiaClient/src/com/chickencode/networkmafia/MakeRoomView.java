@@ -20,15 +20,11 @@ import javax.swing.border.EmptyBorder;
 
 public class MakeRoomView extends JPanel
 {
-	private static MakeRoomView instance;
-	private static boolean haveInstance = false;
+	private static MakeRoomView instance = null;
 	static public MakeRoomView getInstance()	//SingleTon
 	{
-		if(!haveInstance)
-		{
-			haveInstance = false;
+		if(instance == null)
 			instance = new MakeRoomView();
-		}
 		return instance;
 	}
 	
@@ -70,13 +66,19 @@ public class MakeRoomView extends JPanel
 					BufferedReader input = new BufferedReader(new InputStreamReader(client.getInputStream()));
 					BufferedWriter output = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
 					String info = null;
-					output.write("makeroom:" +  inputName.getText() +":"  + DataBase.getDataBase().getId());
+					output.write("makeroom:" +  inputName.getText());
+					output.newLine();
+					output.flush();
 					while((info = input.readLine()) == null);
-					if(info.equals("1"))
+					String args[] = info.split(":");
+					System.out.println("받은 정보 : " + info);
+					if(args[0].equals("1"))
 					{
+						GameRoomView.getInstance().setPort(Integer.parseInt(args[1]));
 						MainFrame.getInstance().changeView(GameRoomView.getInstance());
+						GameRoomView.getInstance().game.initGame();
 					}
-					else if(info.equals("0"))
+					else if(args[0].equals("0"))
 					{
 						labelState.setText("방만들기 실패입니다");
 					}
