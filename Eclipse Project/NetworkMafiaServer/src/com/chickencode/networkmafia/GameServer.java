@@ -199,10 +199,10 @@ public class GameServer implements Runnable
 	}
 	public void prove(int number)
 	{
-		boolean isMapia = gameData.players.get(number).job == 2; 
+		boolean isMapia = (gameData.players.get(number).job == 2); 
 		for(int i = 0; i < gameData.players.size(); i++)
 			if(gameData.players.get(i).job == 3)
-				sendMessage(i,"prove:"+ (isMapia ? 1 : 0));
+				sendMessage(i,"prove:"+number+":"+ (isMapia ? 1 : 0));
 			
 	}
 	public void kill(int number)
@@ -315,14 +315,10 @@ public class GameServer implements Runnable
 	}
 	class GameData
 	{
-		//final int morning = 60000;
-		//final int voteTime = 10000;
-		//final int night = 30000;
-		//final int waitTime = 10000;
-		final int morning = 5000;
-		final int voteTime = 5000;
-		final int night = 5000;
-		final int waitTime = 5000;
+		final int morning = 60000;
+		final int voteTime = 10000;
+		final int night = 30000;
+		final int waitTime = 10000;
 		int chooseMapia = -1;
 		int choosePolice = -1;
 		int roomid;
@@ -384,10 +380,7 @@ public class GameServer implements Runnable
 								{
 									gameData.chooseMapia = Integer.parseInt(args[1]);
 								}
-							}
-							else if(gameData.time == 3 && alive)
-							{
-								if(job == 3 && gameData.choosePolice == -1)
+								else if(job == 3 && gameData.choosePolice == -1)
 								{
 									gameData.choosePolice = Integer.parseInt(args[1]);
 								}
@@ -395,7 +388,6 @@ public class GameServer implements Runnable
 						}
 						else if(args[0].equals("close"))
 						{
-							instance.kill(number);
 							gameData.players.remove(number);
 							gameData.end = true;
 							reviewPlayer();
