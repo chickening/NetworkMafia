@@ -210,7 +210,7 @@ public class LobbyView extends JPanel
 					}
 					catch(Exception e)
 					{
-						
+						e.printStackTrace();
 					}
 					
 				}

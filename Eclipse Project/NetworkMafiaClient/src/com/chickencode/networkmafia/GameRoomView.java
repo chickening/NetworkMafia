@@ -3,8 +3,11 @@ package com.chickencode.networkmafia;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.RenderingHints.Key;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.BufferedReader;
@@ -13,8 +16,14 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
@@ -86,10 +95,18 @@ public class GameRoomView extends JPanel
 			public void actionPerformed(ActionEvent e) {
 				try
 				{
+					/*
+					 * 종료 : exit : id
+					 */
 					game.output.write("close");
 					game.output.newLine();
 					game.output.flush();
+					ByteBuffer buf = ByteBuffer.allocate(1024);;
+					buf.put(("exit:" + DataBase.getDataBase().getId()).getBytes());
+					buf.flip();
+					game.chatChannel.write(buf);
 					game.client.close();
+					game.chatChannel.close();
 					game.client = null;
 					game.connect = false;
 					MainFrame.getInstance().changeView(LobbyView.getInstance());
@@ -130,7 +147,42 @@ public class GameRoomView extends JPanel
 		inputChat.setForeground(Color.white);
 		inputChat.setBounds(70, 790,540, 70);
 		inputChat.setBorder(new EmptyBorder(0, 00, 0, 0));
-		inputChat.setFont(new Font("맑은 고딕" , Font.PLAIN , 25)); 
+		inputChat.setFont(new Font("맑은 고딕" , Font.PLAIN , 25));
+		inputChat.addKeyListener(new KeyListener() {
+			
+			ByteBuffer buf = ByteBuffer.allocate(1024);
+			@Override
+			public void keyTyped(KeyEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void keyReleased(KeyEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if(e.getKeyCode() == KeyEvent.VK_ENTER)
+				{
+					if(inputChat.getText().equals(""))
+						return;
+					try
+					{
+						buf.clear();
+						buf.put(("chat:"+DataBase.getDataBase().getId() + ":"+inputChat.getText()).getBytes());
+						buf.flip();
+						game.chatChannel.write(buf);
+						inputChat.setText("");
+					}catch(Exception ex)
+					{
+						ex.printStackTrace();
+					}
+				}
+			}
+		});
 		this.add(inputChat);
 		
 		this.addMouseListener(new MouseListener() {
@@ -214,6 +266,7 @@ public class GameRoomView extends JPanel
 		boolean connect = true;
 		ArrayList<PlayerData> players = new ArrayList<>();
 		SocketChannel chatChannel = null;
+		Selector selector;
 		Socket client = null;
 		BufferedReader input;
 		BufferedWriter output;
@@ -224,13 +277,18 @@ public class GameRoomView extends JPanel
 			{
 				try 
 				{
-					client = new Socket("localHost" , port);
+					selector = Selector.open();
+					listChatModel.clear();
+					chatChannel =  SocketChannel.open(new InetSocketAddress(DataBase.getDataBase().getIP(),game.port + 1));
+					chatChannel.configureBlocking(false);
+					chatChannel.register(selector, SelectionKey.OP_READ);
+					new Thread(new ChatThread()).start();
+					client = new Socket(DataBase.getDataBase().getIP() , port);
 					input = new BufferedReader(new InputStreamReader(client.getInputStream()));
 					output = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
 					output.write("playerinfo:" + DataBase.getDataBase().getId());
 					output.newLine();
 					output.flush();
-					
 					listChatModel.addElement("게임에 접속하신것응 환영합니다.");
 					new Thread(new GameThread()).start();
 				}catch(Exception e)
@@ -349,6 +407,7 @@ public class GameRoomView extends JPanel
 								listChatModel.addElement("게임에서 패배하였습니다");
 						}
 						MainFrame.getInstance().repaint();
+						scrollChat.getVerticalScrollBar().setValue(scrollChat.getVerticalScrollBar().getMaximum());
 					}
 				}
 				catch(Exception e)
@@ -367,6 +426,68 @@ public class GameRoomView extends JPanel
 		{
 			this.number = number;
 			this.id = id;
+		}
+	}
+	class ChatThread implements Runnable
+	{
+		CharsetDecoder decoder;
+		ChatThread()
+		{
+			try
+			{
+				decoder = Charset.forName("KSC5601").newDecoder();
+			}
+			catch(Exception e)
+			{
+				
+			}
+		}
+		public void run() 
+		{
+			String message = null;
+			String[] receivedMsg = null;
+			while(game.connect)
+			{
+				try
+				{
+					game.selector.select(3000);
+					Iterator iterator = game.selector.selectedKeys().iterator();
+					while(iterator.hasNext())
+					{
+						SelectionKey key = (SelectionKey)iterator.next();
+						if(key.isReadable())
+						{
+							message = read(key);
+							System.out.println("[Chat] : " + message);
+							String args[] = message.split(":");
+							if(args[0].equals("chat"))
+							{
+								String id = args[1];
+								String content = args[2];
+								listChatModel.addElement(id + " : " + content);
+								
+							}
+							
+						}
+						iterator.remove();
+						scrollChat.getVerticalScrollBar().setValue(scrollChat.getVerticalScrollBar().getMaximum());
+					}
+					
+				}catch(Exception e)
+				{
+					e.printStackTrace();
+				}
+				
+			}
+		}
+		public String read(SelectionKey key) throws Exception
+		{
+			SocketChannel sc = (SocketChannel)key.channel();
+			ByteBuffer buffer = ByteBuffer.allocate(1024);
+			sc.read(buffer);
+			buffer.flip();
+			String message = decoder.decode(buffer).toString();
+			return message;
 		}
 	}
 }

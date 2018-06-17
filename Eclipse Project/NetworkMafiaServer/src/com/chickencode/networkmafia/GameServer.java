@@ -4,9 +4,20 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
 import java.util.ArrayList;
+import java.util.Base64.Decoder;
+import java.util.Iterator;
 
 import javax.swing.plaf.SliderUI;
 public class GameServer implements Runnable
@@ -15,6 +26,7 @@ public class GameServer implements Runnable
 	ServerSocket server;
 	GameData gameData;
 	Thread gameServerThread;
+	Thread gameConnectThread;
 	boolean endServer = false;
 	GameServer(int id ,int port)
 	{
@@ -28,7 +40,7 @@ public class GameServer implements Runnable
 		}
 		catch(Exception e)
 		{
-			
+			e.printStackTrace();
 		}
 		startServer();
 	}
@@ -39,7 +51,9 @@ public class GameServer implements Runnable
 	}
 	public void run()
 	{
-		new Thread(new GameConnnectThread()).start();
+		gameConnectThread =new Thread(new GameConnnectThread());
+		gameConnectThread.start();
+		new Thread(new ChatThread()).start();
 		while(!endServer)
 		{
 			try
@@ -82,6 +96,7 @@ public class GameServer implements Runnable
 					notifyTime();
 					gameServerThread.sleep(gameData.night);
 				}
+				System.out.println("게임이 종료되었습니다.");
 				gameServerThread.sleep(gameData.waitTime);	//기다리는시간
 			}catch(Exception e) {}
 		
@@ -261,7 +276,7 @@ public class GameServer implements Runnable
 			}
 		}catch(Exception e)
 		{
-			
+			e.printStackTrace();
 		}
 	}
 	public void sendMessage(int number, String info)
@@ -276,7 +291,104 @@ public class GameServer implements Runnable
 		}
 		catch(Exception e)
 		{
+			e.printStackTrace();
+		}
+	}
+	class ChatThread implements Runnable
+	{
+		Selector selector;
+		ServerSocketChannel serverChannel;
+		ServerSocket serverSocket;
+		CharsetDecoder decoder;
+		ArrayList<SocketChannel> socketList;
+		ByteBuffer buf;
+		public void run()
+		{
+			try
+			{
+				decoder = Charset.forName("KSC5601").newDecoder();
+				selector = Selector.open();
+				serverChannel = ServerSocketChannel.open();
+				serverChannel.configureBlocking(false);
+				serverSocket = serverChannel.socket();
+				serverSocket.bind(new InetSocketAddress("localHost", gameData.port + 1));
+				serverChannel.register(selector,SelectionKey.OP_ACCEPT);
+				socketList = new ArrayList<>();
+				buf = ByteBuffer.allocate(1024);
+				while(!instance.endServer)
+				{
+					selector.select();
+					Iterator iterator = selector.selectedKeys().iterator();
+					while(iterator.hasNext())
+					{
+						
+						SelectionKey key = (SelectionKey)iterator.next();
+						if(key.isAcceptable())
+							accept(key);
+						else if(key.isReadable())
+						{
+							String info = read(key);
+							String args[] = info.split(":");
+							System.out.println("[Chat] : " + info);
+							if(args[0].equals("exit"))
+							{
+								System.out.println("DEBUG : 1");
+								socketList.remove((SocketChannel)key.channel());
+								System.out.println("DEBUG : 2");
+								((SocketChannel)key.channel()).close();
+								System.out.println("DEBUG : 3");
+							}
+							else if(args[0].equals("chat"))
+							{
+								String id = args[1];
+								String context = args[2];
+								buf.clear();
+								buf.put(("chat:"+id+":"+context).getBytes());
+								buf.flip();
+								System.out.println("");
+								for(int i = 0; i < socketList.size(); i++)
+									socketList.get(i).write(buf);
+							}
+						}
+						iterator.remove();
+					}
+				}
+			}
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
+		}
+		public void accept(SelectionKey key)
+		{
+			ServerSocketChannel serverChannel = (ServerSocketChannel)key.channel();
+			SocketChannel socketChannel = null;
+			try
+			{
+				socketChannel = serverChannel.accept();
+				if(socketChannel == null)return;
+				socketChannel.configureBlocking(false);
+				socketChannel.register(selector, SelectionKey.OP_READ);
+				socketList.add(socketChannel);
+			}catch(Exception ioe){ioe.printStackTrace(); }
 			
+		}
+		public String read(SelectionKey key)
+		{
+			String message = null;
+			try
+			{
+				SocketChannel socketChannel = (SocketChannel)key.channel();
+				ByteBuffer buf = ByteBuffer.allocate(1024);
+				socketChannel.read(buf);
+				buf.flip();
+				message = decoder.decode(buf).toString();
+				buf.clear();
+			}catch(Exception e)
+			{
+				e.printStackTrace();
+			}
+			return message;
 		}
 	}
 	class GameConnnectThread implements Runnable	// 플레이어 받는 그런 쓰레드
@@ -288,7 +400,10 @@ public class GameServer implements Runnable
 			{
 				while(!endServer)
 				{
-					while(gameData.players.size() == 8);	// 플레이어수가 꽉차면 무한대기
+					while(gameData.players.size() == 8)	// 플레이어수가 꽉차면 무한대기
+					{
+						gameConnectThread.sleep(100);
+					}
 					Socket client = server.accept();
 					System.out.println("새로운 플레이어 연결하는중....");
 					PlayerData newPlayer = new PlayerData();
@@ -309,7 +424,7 @@ public class GameServer implements Runnable
 			}
 			catch(Exception e)
 			{
-				
+				e.printStackTrace();
 			}
 		}
 	}
@@ -340,6 +455,7 @@ public class GameServer implements Runnable
 		int job;
 		boolean alive;
 		Socket client;
+		SocketChannel channel;
 		BufferedReader input;
 		BufferedWriter output;
 		int number;
@@ -388,12 +504,15 @@ public class GameServer implements Runnable
 						}
 						else if(args[0].equals("close"))
 						{
+							gameData.players.get(number).client.close();
+							gameData.players.get(number).connect = false;
 							gameData.players.remove(number);
 							gameData.end = true;
 							reviewPlayer();
 						}
 					}catch(Exception e)	// 연결 끊어짐
 					{			
+						e.printStackTrace();
 					}
 				}
 			}
