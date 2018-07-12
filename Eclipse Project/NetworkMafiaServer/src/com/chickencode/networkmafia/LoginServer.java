@@ -68,7 +68,6 @@ class ReadWatingServer implements Runnable
 			BufferedReader input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 			BufferedWriter output = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
 			String info;
-			System.out.println("го©К");
 			while((info = input.readLine()) == null)
 			{
 				if(System.currentTimeMillis() - firstTime >= timeout)

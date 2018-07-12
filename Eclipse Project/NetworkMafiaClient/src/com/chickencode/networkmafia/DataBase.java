@@ -19,7 +19,7 @@ public class DataBase
 	private String keyStore = "";
 	private String keyPass = "";
 	private String id = "";
-	private String ip = "localHost";
+	private String ip = "networkmapia.oa.to";
 	public final int loginServerPort = 1115;
 	public final int lobbyServerPort = 1116;
 	public void setKeyStore(String keyStore)
@@ -45,6 +45,10 @@ public class DataBase
 	public String getIP()
 	{
 		return ip;
+	}
+	public void setIP(String ip)
+	{
+		this.ip = ip;
 	}
 	public void setId(String id)
 	{

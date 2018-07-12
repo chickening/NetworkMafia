@@ -54,6 +54,7 @@ public class GameServer implements Runnable
 		gameConnectThread =new Thread(new GameConnnectThread());
 		gameConnectThread.start();
 		new Thread(new ChatThread()).start();
+		gameData.time = 1;
 		while(!endServer)
 		{
 			try
@@ -74,40 +75,57 @@ public class GameServer implements Runnable
 					System.out.println("[GameServer] : 아침");
 					gameData.time = 1;
 					notifyTime();
+					closeAct();
 					thinkResult();
 					if(gameData.end)
 						break;
-					closeAct();
-					gameServerThread.sleep(gameData.morning);
-					System.out.println("[GameServer] : 투표");
 					
+					
+					if(!waitingTime(gameData.morning))
+						break;
+					System.out.println("[GameServer] : 투표");
 					gameData.time = 2;
 					notifyTime();
 					openVote();
-					gameServerThread.sleep(gameData.voteTime);
-					System.out.println("[GameServer] : 저녁");
-					
-					thinkResult();
-					if(gameData.end)
+					if(!waitingTime(gameData.voteTime))
 						break;
-					openAct();
-					voteResult();
+					System.out.println("[GameServer] : 저녁");
 					gameData.time = 3;
+					voteResult();
+					thinkResult();
+					openAct();
 					notifyTime();
-					gameServerThread.sleep(gameData.night);
+					if(!waitingTime(gameData.night))
+						break;
 				}
+				for(int i = 0; i < gameData.players.size(); i++)
+						gameData.players.get(i).alive = true;
+				gameData.time = 1;
 				System.out.println("게임이 종료되었습니다.");
 				gameServerThread.sleep(gameData.waitTime);	//기다리는시간
 			}catch(Exception e) {}
 		
 		}
 	}
+	public boolean waitingTime(long time) throws Exception
+	{
+		long bt = System.currentTimeMillis();
+		while(System.currentTimeMillis() - bt <= time)
+		{
+			gameServerThread.sleep(10);
+			if(gameData.end)
+				return false;
+		}
+		return true;
+	}
 	public void createTestPlayer()
 	{
-		for(int i = 0; i < 7; i++)
+		String botName[] = {"나서스_봇","문도_봇","하이머딩거_봇","애니_봇","누누_봇","가렌_봇","야스오_봇"};
+		gameData.roomName = "테스트 서버입니다.";
+		for(int i = 0; i < 6; i++)
 		{
 			PlayerData p = new PlayerData();
-			p.id = ""+(int)(Math.random() * 1000 + 1);
+			p.id = botName[i];
 			p.input = new BufferedReader(new InputStreamReader(System.in));
 			p.output = new BufferedWriter(new OutputStreamWriter(System.out));
 			gameData.players.add(p);
@@ -332,11 +350,8 @@ public class GameServer implements Runnable
 							System.out.println("[Chat] : " + info);
 							if(args[0].equals("exit"))
 							{
-								System.out.println("DEBUG : 1");
 								socketList.remove((SocketChannel)key.channel());
-								System.out.println("DEBUG : 2");
 								((SocketChannel)key.channel()).close();
-								System.out.println("DEBUG : 3");
 							}
 							else if(args[0].equals("chat"))
 							{
@@ -345,9 +360,13 @@ public class GameServer implements Runnable
 								buf.clear();
 								buf.put(("chat:"+id+":"+context).getBytes());
 								buf.flip();
-								System.out.println("");
-								for(int i = 0; i < socketList.size(); i++)
-									socketList.get(i).write(buf);
+								for(int i = 0; i < gameData.players.size(); i++)
+									if(gameData.players.get(i).id.equals(id) && gameData.players.get(i).alive && gameData.time != 3)
+										for(int j = 0; j < socketList.size(); j++)
+										{
+											socketList.get(j).write(buf);
+											buf.rewind();
+										}
 							}
 						}
 						iterator.remove();
@@ -418,6 +437,7 @@ public class GameServer implements Runnable
 					String args[] = info.split(":");
 					newPlayer.id = args[1];
 					newPlayer.runInputThread();
+					newPlayer.alive = true;
 					gameData.players.add(newPlayer);
 					reviewPlayer();
 				}

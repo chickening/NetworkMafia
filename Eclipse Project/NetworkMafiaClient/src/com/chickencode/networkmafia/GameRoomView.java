@@ -464,8 +464,8 @@ public class GameRoomView extends JPanel
 							{
 								String id = args[1];
 								String content = args[2];
-								listChatModel.addElement(id + " : " + content);
-								
+								if(game.time != 3)
+									listChatModel.addElement(id + " : " + content);	
 							}
 							
 						}
